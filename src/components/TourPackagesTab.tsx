@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Eye, Plus, Trash2 } from "lucide-react";
 import type { Lead, PackageStatus } from "../types";
 import { packageStore, usePackages } from "../lib/packageStore";
-import { durationOf, dateShort } from "../lib/packageLogic";
+import { durationOf, dateShort, isOptionComplete } from "../lib/packageLogic";
 import { fmtDate, fmtDateTime } from "../lib/format";
 import TourPackageEditor from "./TourPackageEditor";
 
@@ -64,7 +64,7 @@ export default function TourPackagesTab({ lead }: { lead: Lead }) {
                     <td className="px-2 py-3">
                       <button onClick={() => setOpenId(p.id)} className="text-left font-bold text-brand hover:underline">{p.title || "(chưa đặt tên)"}</button>
                       <div className="mt-1 text-[11px] text-gray-400">
-                        {p.days.length} ngày · {p.nights.filter((n) => n.hotelId).length}/{p.nights.length} đêm có khách sạn
+                        {p.days.length} ngày · {p.options.filter((o) => o.nights.length > 0 && isOptionComplete(o)).length}/{p.options.length} phương án khách sạn đủ
                         {p.travelDate ? ` · khởi hành ${dateShort(new Date(p.travelDate + "T00:00:00"))}` : ""}
                       </div>
                       <div className="text-[11px] text-gray-400">{p.createdBy} · cập nhật {fmtDateTime(p.updatedAt)}</div>

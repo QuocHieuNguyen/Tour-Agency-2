@@ -1,7 +1,7 @@
 import { useMemo, useSyncExternalStore } from "react";
 import type { TourPackage } from "../types";
 import { seedPackages } from "../data/seedPackages";
-import { newPackage, nextPackageCode, type LeadBrief } from "./packageLogic";
+import { newPackage, nextPackageCode, normalizePackage, type LeadBrief } from "./packageLogic";
 
 /**
  * Store tour package (sessionStorage). Cùng vai trò leadRepository: sau này thay bằng Supabase
@@ -15,7 +15,7 @@ function load(): TourPackage[] {
   if (cache) return cache;
   try {
     const raw = sessionStorage.getItem(KEY);
-    cache = raw ? (JSON.parse(raw) as TourPackage[]) : seedPackages();
+    cache = raw ? (JSON.parse(raw) as Record<string, unknown>[]).map(normalizePackage) : seedPackages();
   } catch {
     cache = seedPackages();
   }

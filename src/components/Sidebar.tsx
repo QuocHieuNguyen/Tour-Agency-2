@@ -1,6 +1,6 @@
 import {
   Building2, BookOpen, Users, UserSquare2, Ticket, FileText, Network, LineChart,
-  GraduationCap, Factory, MapPin, Package, TriangleAlert, LayoutDashboard, type LucideIcon,
+  GraduationCap, Factory, MapPin, Package, TriangleAlert, LayoutDashboard, Hotel, type LucideIcon,
 } from "lucide-react";
 
 interface Item { id: string; label: string; icon: LucideIcon; enabled?: boolean }
@@ -16,13 +16,14 @@ const ITEMS: Item[] = [
   { id: "report", label: "Báo cáo B2B Agent", icon: LineChart },
   { id: "academy", label: "Academy", icon: GraduationCap },
   { id: "vendors", label: "Vendors Management", icon: Factory },
-  { id: "itinerary", label: "Itinerary Management", icon: MapPin },
+  { id: "itinerary", label: "Itinerary Management", icon: MapPin, enabled: true },
+  { id: "accommodation", label: "Accommodation Management", icon: Hotel, enabled: true },
   { id: "packages", label: "Tour Packages", icon: Package },
   { id: "violations", label: "Vi phạm nhân viên", icon: TriangleAlert },
   { id: "dashboard", label: "System Dashboard", icon: LayoutDashboard },
 ];
 
-export default function Sidebar({ active }: { active: string }) {
+export default function Sidebar({ active, onNavigate }: { active: string; onNavigate: (id: string) => void }) {
   return (
     <aside className="hidden w-[250px] shrink-0 flex-col border-r border-line bg-white md:flex">
       <div className="border-b border-line px-5 py-4">
@@ -37,6 +38,7 @@ export default function Sidebar({ active }: { active: string }) {
             <button
               key={id}
               disabled={!enabled}
+              onClick={() => enabled && onNavigate(id)}
               aria-current={isActive ? "page" : undefined}
               title={enabled ? undefined : "Chưa build"}
               className={[

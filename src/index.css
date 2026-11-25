@@ -28,12 +28,13 @@ body { @apply bg-white font-sans text-ink antialiased; font-size: 13px; }
 
 /* ---------- Tour package: trang "Word" ---------- */
 .doc-input {
-  @apply w-full rounded-sm border border-transparent bg-transparent text-inherit outline-none;
+  @apply w-full rounded-sm border border-gray-200 bg-transparent px-1 text-inherit outline-none;
   font: inherit;
 }
-.doc-input:hover { @apply border-gray-300; }
+.doc-input:hover { @apply border-gray-400; }
 .doc-input:focus { @apply border-brand bg-blue-50/40; }
 .doc-table { @apply w-full border-collapse text-[12px]; }
+.doc-kv { table-layout: fixed; }
 .doc-table th { @apply px-2 py-1.5 text-left align-top font-bold; }
 .doc-table td { @apply px-2 py-1.5 align-top; }
 .doc-grid th, .doc-grid td { @apply border border-gray-300; }

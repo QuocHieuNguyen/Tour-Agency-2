@@ -1,9 +1,9 @@
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { Building2, ChevronDown, DollarSign, Download, FileText, Printer, Route, Save, X } from "lucide-react";
-import type { ItineraryDay, NightStay, PackageStatus, TourPackage } from "../types";
+import type { AccOption, ItineraryDay, PackageStatus, TourPackage } from "../types";
 import { packageStore } from "../lib/packageStore";
-import { routeOf, syncNights } from "../lib/packageLogic";
+import { routeOf, syncOptions } from "../lib/packageLogic";
 import PackageDocument from "./PackageDocument";
 import PackageBuilder, { type BuilderTab } from "./PackageBuilder";
 
@@ -32,11 +32,11 @@ export default function TourPackageEditor({ pkg, onClose }: { pkg: TourPackage; 
     setDraft((d) => {
       const oldRoute = routeOf(d.days);
       return {
-        ...d, days, nights: syncNights(days, d.nights),
+        ...d, days, options: syncOptions(days, d.options),
         subtitle: !d.subtitle || d.subtitle === oldRoute ? routeOf(days) : d.subtitle,
       };
     });
-  const setNights = (nights: NightStay[]) => setDraft((d) => ({ ...d, nights }));
+  const setOptions = (options: AccOption[]) => setDraft((d) => ({ ...d, options: syncOptions(d.days, options) }));
 
   const save = () => {
     const saved = packageStore.update(draft);
@@ -91,7 +91,7 @@ export default function TourPackageEditor({ pkg, onClose }: { pkg: TourPackage; 
             <h3 className="font-bold">{DRAWER_TITLE[tab]}</h3>
             <button onClick={() => setTab(null)} aria-label="Đóng bảng" className="ml-auto rounded p-1 hover:bg-panel"><X size={16} /></button>
           </div>
-          <div className="flex-1 overflow-y-auto p-4"><PackageBuilder tab={tab} pkg={draft} set={set} setDays={setDays} setNights={setNights} /></div>
+          <div className="flex-1 overflow-y-auto p-4"><PackageBuilder tab={tab} pkg={draft} set={set} setDays={setDays} setOptions={setOptions} /></div>
         </aside>
       )}
 
