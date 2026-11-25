@@ -14,10 +14,10 @@ Hệ thống quản lý du lịch kiểu TMS ("The Smart Way to Run Your Travel 
 
 ## 2b. Supabase – khoá & bảo mật (QUAN TRỌNG)
 - **Publishable key** (`sb_publishable_...`) → `VITE_SUPABASE_PUBLISHABLE_KEY`, nằm trong frontend, an toàn vì có đăng nhập + RLS.
-- **Secret key** (`sb_secret_...`) bỏ qua RLS → CHỈ ở `.env.local` dưới tên `SUPABASE_SECRET_KEY` (không tiền tố VITE_), chỉ dùng cho `npm run seed` và backend Express sau này. `src/lib/supabase.ts` tự chặn nếu phát hiện secret key trong biến VITE_.
+- **Secret key** (`sb_secret_...`) bỏ qua RLS → CHỈ ở `.env` dưới tên `SUPABASE_SECRET_KEY` (không tiền tố VITE_), chỉ dùng cho `npm run seed` và backend Express sau này. `src/lib/supabase.ts` tự chặn nếu phát hiện secret key trong biến VITE_.
 - Không dán secret key vào chat/code/git. Nếu lỡ lộ → rotate trong Supabase Dashboard.
 - Schema + RLS + Realtime: `supabase/schema.sql` (4 bảng leads, tour_packages, itineraries, hotels; mỗi bảng có cột `data jsonb`). Policy hiện tại: mọi user đã đăng nhập được đọc/ghi tất cả — cần siết lại nếu có phân quyền.
-- Cài đặt: (1) chạy `supabase/schema.sql` trong SQL Editor; (2) copy `.env.example` → `.env.local` và điền; (3) `npm install`; (4) `npm run seed` (nạp dữ liệu mẫu + tạo user nếu có SEED_ADMIN_*); (5) `npm run dev` và đăng nhập.
+- Cài đặt: (1) chạy `supabase/schema.sql` trong SQL Editor; (2) copy `.env.example` → `.env` và điền; (3) `npm install`; (4) `npm run seed` (nạp dữ liệu mẫu + tạo user nếu có SEED_ADMIN_*); (5) `npm run dev` và đăng nhập.
 - Kiến trúc dữ liệu: UI đọc đồng bộ từ cache (`lib/collection.ts`), ghi lạc quan rồi đẩy xuống `lib/persistence.ts` (session hoặc Supabase); lead qua `leadRepository.ts`. Realtime tự tải lại khi người khác sửa. Lỗi ghi hiện toast (`lib/notify.ts`).
 
 ## 3. Cấu trúc thư mục

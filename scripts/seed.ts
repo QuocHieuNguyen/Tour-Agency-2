@@ -9,13 +9,13 @@ import { SEED_LEADS } from "../src/data/seed";
 import { HOTEL_LIBRARY, ITINERARY_LIBRARY } from "../src/data/library";
 import { seedPackages } from "../src/data/seedPackages";
 
-config({ path: ".env.local" });
+config({ path: ".env" });
 config();
 
 const url = process.env.VITE_SUPABASE_URL ?? process.env.SUPABASE_URL;
 const secret = process.env.SUPABASE_SECRET_KEY;
 if (!url || !secret) {
-  console.error("Thiếu VITE_SUPABASE_URL hoặc SUPABASE_SECRET_KEY trong .env.local");
+  console.error("Thiếu VITE_SUPABASE_URL hoặc SUPABASE_SECRET_KEY trong .env");
   process.exit(1);
 }
 
