@@ -19,7 +19,7 @@ const isExtra = (name: string) => /extra/i.test(name);
 /** "EXTRA BED" tính theo giường, còn lại tính theo phòng */
 export const unitOf = (roomName: string) => (/bed/i.test(roomName) ? "Bed(s)" : "Room(s)");
 
-export function stayFromHotel(h: HotelTemplate, destination: string, adults: number, id = uid()): NightStay {
+export function stayFromHotel(h: HotelTemplate, destination: string, adults: number, id : string = uid()): NightStay {
   const { rooms, extra } = autoRooms(adults);
   const main = h.rooms.find((r) => !isExtra(r.name));
   const lines: RoomLine[] = h.rooms

@@ -14,6 +14,7 @@ interface Props {
   setDays: (days: ItineraryDay[]) => void;
   setOptions: (options: AccOption[]) => void;
 }
+type PanelProps = Omit<Props, "tab">;
 
 export default function PackageBuilder({ tab, ...rest }: Props) {
   return tab === "itin" ? <ItineraryPanel {...rest} /> : tab === "acc" ? <AccommodationPanel {...rest} /> : <PricePanel {...rest} />;
@@ -39,7 +40,7 @@ function CommitTextarea({ value, onCommit, rows = 3 }: { value: string; onCommit
 }
 
 /* ============ 1. ITINERARIES ============ */
-function ItineraryPanel({ pkg, setDays }: Props) {
+function ItineraryPanel({ pkg, setDays }: PanelProps) {
   const library = itineraryStore.useAll();
   const [q, setQ] = useState("");
   const list = library.filter((t) => t.title.toLowerCase().includes(q.trim().toLowerCase()));
@@ -105,7 +106,7 @@ function ItineraryPanel({ pkg, setDays }: Props) {
 }
 
 /* ============ 2. ACCOMMODATIONS ============ */
-function AccommodationPanel({ pkg, set, setOptions }: Props) {
+function AccommodationPanel({ pkg, set, setOptions }: PanelProps) {
   const hotels = hotelStore.useAll();
   const [idx, setIdx] = useState(0);
   const opt = pkg.options[Math.min(idx, pkg.options.length - 1)];
@@ -206,7 +207,7 @@ function AccommodationPanel({ pkg, set, setOptions }: Props) {
 }
 
 /* ============ 3. GET PRICE ============ */
-function PricePanel({ pkg, set }: Props) {
+function PricePanel({ pkg, set }: PanelProps) {
   const row = (label: string, value: string, strong = false) => (
     <div className={`flex justify-between gap-3 py-1.5 ${strong ? "font-bold" : ""}`}><span>{label}</span><span className="shrink-0">{value}</span></div>
   );
