@@ -1,0 +1,26 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --color-brand: #2f4fd8;
+  --color-brand-dark: #1e3aa8;
+  --color-navy: #0d2557;
+  --color-ink: #1f2937;
+  --color-line: #e5e7eb;
+  --color-panel: #f6f7fb;
+}
+
+html, body, #root { height: 100%; }
+body { @apply bg-white font-sans text-ink antialiased; font-size: 13px; }
+
+.field {
+  @apply w-full rounded border border-amber-300 bg-white px-2.5 py-1.5 text-[13px] outline-none transition;
+  @apply focus:border-brand focus:ring-2 focus:ring-brand/20;
+}
+.field:disabled { @apply cursor-not-allowed border-line bg-gray-100 text-gray-500; }
+.label { @apply mb-1 block text-[12px] font-semibold text-gray-700; }
+
+@media (prefers-reduced-motion: reduce) {
+  * { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+}
+.field[aria-invalid="true"] { @apply border-red-500 ring-2 ring-red-500/20; }
