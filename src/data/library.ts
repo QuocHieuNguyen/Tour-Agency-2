@@ -53,6 +53,6 @@ export const HOTEL_LIBRARY: HotelTemplate[] = [
   { id: "ht-rey", name: "Rey Hotel Hanoi", stars: 4, address: "14 Ly Nam De, Hoan Kiem, Hanoi", destination: "Hanoi", rooms: [{ name: "Deluxe", price: 70 }, { name: "EXTRA BED", price: 27 }] },
   { id: "ht-eliana", name: "Eliana Signature Hotel & Spa", stars: 4, address: "38 Lo Su Street, Hoan Kiem district, Hanoi", destination: "Hanoi", rooms: [{ name: "Deluxe", price: 65.5 }, { name: "EXTRA BED", price: 26 }] },
   { id: "ht-santa", name: "SANTA LUXURY HOTEL", stars: 4, address: "09 Do Ba, Bac My An, Ngu Hanh Son, Da Nang", destination: "Da Nang", rooms: [{ name: "Deluxe", price: 60 }, { name: "EXTRA BED", price: 25 }] },
-  { id: "ht-sample-hn3", name: "Hanoi 3★ Hotel (mẫu)", stars: 3, address: "Địa chỉ mẫu, Hoan Kiem, Hanoi", destination: "Hanoi", rooms: [{ name: "Deluxe", price: 40 }, { name: "EXTRA BED", price: 18 }] },
-  { id: "ht-sample-dn3", name: "Da Nang 3★ Hotel (mẫu)", stars: 3, address: "Địa chỉ mẫu, Ngu Hanh Son, Da Nang", destination: "Da Nang", rooms: [{ name: "Deluxe", price: 35 }, { name: "EXTRA BED", price: 15 }] },
+  { id: "ht-sample-hn3", name: "Sample Hotel Hanoi (mẫu)", stars: 3, address: "Địa chỉ mẫu, Hoan Kiem, Hanoi", destination: "Hanoi", rooms: [{ name: "Deluxe", price: 40 }, { name: "EXTRA BED", price: 18 }] },
+  { id: "ht-sample-dn3", name: "Sample Hotel Da Nang (mẫu)", stars: 3, address: "Địa chỉ mẫu, Ngu Hanh Son, Da Nang", destination: "Da Nang", rooms: [{ name: "Deluxe", price: 35 }, { name: "EXTRA BED", price: 15 }] },
 ];

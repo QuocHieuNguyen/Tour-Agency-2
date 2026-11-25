@@ -4,6 +4,7 @@ import {
 import type { TourPackage } from "../types";
 import { addDays, computePrices, dateLong, dateShort, durationOf, groupStays, isOptionComplete, mealsText, unitOf, usd } from "./packageLogic";
 import { fmtDate } from "./format";
+import { downloadBlob, safeFileName } from "./download";
 
 const FONT = "Times New Roman";
 const GREY = "D9D9D9";
@@ -146,14 +147,5 @@ export async function exportPackageDocx(pkg: TourPackage) {
   children.push(p("Should you have any further inquiries, please feel free to contact us at any time!", { italics: true, center: true, before: 300 }));
 
   const doc = new Document({ sections: [{ properties: { page: { margin: { top: 900, bottom: 900, left: 1000, right: 1000 } } }, children }] });
-  download(await Packer.toBlob(doc), `${pkg.code.replace("/", "-")} ${pkg.title}.docx`);
-}
-
-function download(blob: Blob, name: string) {
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = name;
-  a.click();
-  setTimeout(() => URL.revokeObjectURL(url), 1000);
+  downloadBlob(await Packer.toBlob(doc), `${safeFileName(`${pkg.code} ${pkg.title}`)}.docx`);
 }

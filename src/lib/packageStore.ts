@@ -1,48 +1,36 @@
 import { useMemo, useSyncExternalStore } from "react";
 import type { TourPackage } from "../types";
 import { seedPackages } from "../data/seedPackages";
+import { createCollection } from "./collection";
+import { makePersistence } from "./persistence";
 import { newPackage, nextPackageCode, normalizePackage, type LeadBrief } from "./packageLogic";
 
-/**
- * Store tour package (sessionStorage). Cùng vai trò leadRepository: sau này thay bằng Supabase
- * (bảng tour_packages, cột days/nights dạng JSONB) mà không đổi UI.
- */
-const KEY = "tms.packages.v1";
-let cache: TourPackage[] | null = null;
-const listeners = new Set<() => void>();
-
-function load(): TourPackage[] {
-  if (cache) return cache;
-  try {
-    const raw = sessionStorage.getItem(KEY);
-    cache = raw ? (JSON.parse(raw) as Record<string, unknown>[]).map(normalizePackage) : seedPackages();
-  } catch {
-    cache = seedPackages();
-  }
-  return cache;
-}
-
-function commit(next: TourPackage[]) {
-  cache = next;
-  try { sessionStorage.setItem(KEY, JSON.stringify(next)); } catch { /* ảnh bìa quá lớn hoặc storage bị chặn */ }
-  listeners.forEach((l) => l());
-}
+/** Store tour package. API đồng bộ cho UI; dữ liệu nằm ở session hoặc bảng `tour_packages` (Supabase). */
+const col = createCollection(
+  makePersistence<TourPackage>({
+    table: "tour_packages", key: "tms.packages.v1", seed: seedPackages, newItem: "end",
+    orderBy: { column: "created_at", ascending: true },
+    extra: (p) => ({ lead_id: p.leadId, code: p.code }),
+    normalize: normalizePackage,
+  }),
+);
 
 export const packageStore = {
-  getAll: load,
-  subscribe(fn: () => void) { listeners.add(fn); return () => { listeners.delete(fn); }; },
+  getAll: col.getAll,
+  subscribe: col.subscribe,
+  init: col.init,
+  reset: col.reset,
   create(lead: LeadBrief): TourPackage {
-    const all = load();
-    const pkg = newPackage(lead, nextPackageCode(lead.code, all.filter((p) => p.leadId === lead.id)));
-    commit([...all, pkg]);
+    const pkg = newPackage(lead, nextPackageCode(lead.code, col.getAll().filter((p) => p.leadId === lead.id)));
+    col.upsert(pkg);
     return pkg;
   },
   update(pkg: TourPackage): TourPackage {
     const saved = { ...pkg, updatedAt: new Date().toISOString() };
-    commit(load().map((p) => (p.id === pkg.id ? saved : p)));
+    col.upsert(saved);
     return saved;
   },
-  remove(id: string) { commit(load().filter((p) => p.id !== id)); },
+  remove: col.remove,
 };
 
 /** leadId = undefined → tất cả package; leadId = "" → không có package nào (lead chưa lưu) */

@@ -1,39 +1,51 @@
 import { useSyncExternalStore } from "react";
+import type { Persistence } from "./persistence";
+import { errMsg, notify } from "./notify";
 
 /**
- * Kho dữ liệu dạng danh sách lưu sessionStorage (dùng cho thư viện Itinerary / Hotel).
- * Sau này thay bằng bảng Supabase mà giữ nguyên API.
+ * Kho danh sách trong bộ nhớ (UI đọc đồng bộ) + ghi xuống Persistence ở nền.
+ * - Cập nhật "lạc quan": UI đổi ngay; nếu ghi thất bại → báo lỗi và tải lại từ nguồn thật.
+ * - init() tải dữ liệu (gọi sau khi đăng nhập), reset() xoá cache khi đăng xuất.
  */
-export function createCollection<T extends { id: string }>(key: string, seed: () => T[]) {
-  let cache: T[] | null = null;
+export function createCollection<T extends { id: string }>(p: Persistence<T>) {
+  const fresh = () => (p.loadSync ? p.loadSync() : []);
+  let cache: T[] = fresh();
   const listeners = new Set<() => void>();
+  let initPromise: Promise<void> | null = null;
+  let unsubscribe: (() => void) | null = null;
+  let timer: ReturnType<typeof setTimeout> | undefined;
 
-  const getAll = (): T[] => {
-    if (cache) return cache;
-    try {
-      const raw = sessionStorage.getItem(key);
-      cache = raw ? (JSON.parse(raw) as T[]) : seed();
-    } catch {
-      cache = seed();
-    }
-    return cache;
+  const set = (next: T[]) => { cache = next; listeners.forEach((l) => l()); };
+  const reload = async () => {
+    try { set(await p.load()); } catch (e) { notify(`Không tải được dữ liệu: ${errMsg(e)}`); }
   };
-  const commit = (next: T[]) => {
-    cache = next;
-    try { sessionStorage.setItem(key, JSON.stringify(next)); } catch { /* storage bị chặn */ }
-    listeners.forEach((l) => l());
-  };
+  const guard = (task: Promise<void>) => task.catch((e) => { notify(`Lưu thất bại: ${errMsg(e)}`); void reload(); });
   const subscribe = (fn: () => void) => { listeners.add(fn); return () => { listeners.delete(fn); }; };
+  const getAll = () => cache;
 
   return {
     getAll,
     subscribe,
-    /** có id trùng → cập nhật; chưa có → thêm vào đầu danh sách */
-    upsert(item: T) {
-      const all = getAll();
-      commit(all.some((x) => x.id === item.id) ? all.map((x) => (x.id === item.id ? item : x)) : [item, ...all]);
+    init(): Promise<void> {
+      initPromise ??= (async () => {
+        await reload();
+        unsubscribe = p.subscribe?.(() => { clearTimeout(timer); timer = setTimeout(() => void reload(), 300); }) ?? null;
+      })();
+      return initPromise;
     },
-    remove(id: string) { commit(getAll().filter((x) => x.id !== id)); },
+    reset() {
+      unsubscribe?.(); unsubscribe = null; clearTimeout(timer); initPromise = null;
+      set(fresh());
+    },
+    upsert(item: T) {
+      const exists = cache.some((x) => x.id === item.id);
+      set(exists ? cache.map((x) => (x.id === item.id ? item : x)) : p.newItem === "end" ? [...cache, item] : [item, ...cache]);
+      void guard(p.upsert(item));
+    },
+    remove(id: string) {
+      set(cache.filter((x) => x.id !== id));
+      void guard(p.remove(id));
+    },
     useAll: () => useSyncExternalStore(subscribe, getAll),
   };
 }

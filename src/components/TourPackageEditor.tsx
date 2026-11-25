@@ -1,9 +1,10 @@
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { Building2, ChevronDown, DollarSign, Download, FileText, Printer, Route, Save, X } from "lucide-react";
+import { Building2, ChevronDown, DollarSign, Download, FileCode2, FileText, Printer, Route, Save, X } from "lucide-react";
 import type { AccOption, ItineraryDay, PackageStatus, TourPackage } from "../types";
 import { packageStore } from "../lib/packageStore";
 import { routeOf, syncOptions } from "../lib/packageLogic";
+import { exportPackageMarkdown } from "../lib/exportMarkdown";
 import PackageDocument from "./PackageDocument";
 import PackageBuilder, { type BuilderTab } from "./PackageBuilder";
 
@@ -62,6 +63,10 @@ export default function TourPackageEditor({ pkg, onClose }: { pkg: TourPackage; 
       setBusy(false);
     }
   };
+  const exportMd = () => {
+    setExportOpen(false);
+    exportPackageMarkdown(draft);
+  };
   const exportPdf = () => {
     setExportOpen(false);
     const prev = document.title;
@@ -115,8 +120,9 @@ export default function TourPackageEditor({ pkg, onClose }: { pkg: TourPackage; 
               <Download size={14} /> {busy ? "ĐANG XUẤT…" : "EXPORT"} <ChevronDown size={12} />
             </button>
             {exportOpen && (
-              <div className="absolute bottom-full right-0 mb-1 w-44 overflow-hidden rounded border border-line bg-white shadow-lg">
+              <div className="absolute bottom-full right-0 mb-1 w-48 overflow-hidden rounded border border-line bg-white shadow-lg">
                 <button onClick={exportWord} className="flex w-full items-center gap-2 px-3 py-2 text-left hover:bg-panel"><FileText size={14} /> Word (.docx)</button>
+                <button onClick={exportMd} className="flex w-full items-center gap-2 px-3 py-2 text-left hover:bg-panel"><FileCode2 size={14} /> Markdown (.md)</button>
                 <button onClick={exportPdf} className="flex w-full items-center gap-2 px-3 py-2 text-left hover:bg-panel"><Printer size={14} /> PDF (in / lưu PDF)</button>
               </div>
             )}

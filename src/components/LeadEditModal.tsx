@@ -9,6 +9,7 @@ import {
 } from "../data/options";
 import { fmtDateTime } from "../lib/format";
 import { usePackages } from "../lib/packageStore";
+import { errMsg, notify } from "../lib/notify";
 import TourPackagesTab from "./TourPackagesTab";
 
 interface Props {
@@ -56,6 +57,8 @@ export default function LeadEditModal({ lead, onSave, onClose }: Props) {
       const result = await onSave(draft);
       setSaved(result);
       setDraft(result);
+    } catch (e) {
+      notify(`Lưu lead thất bại: ${errMsg(e)}`);
     } finally {
       setSaving(false);
     }

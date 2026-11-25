@@ -1,6 +1,6 @@
-import { Bell, Menu } from "lucide-react";
+import { Bell, LogOut, Menu } from "lucide-react";
 
-export default function Header() {
+export default function Header({ userEmail, onSignOut }: { userEmail?: string; onSignOut?: () => void }) {
   return (
     <header className="flex items-center gap-4 bg-navy px-5 py-3 text-white">
       <Menu size={20} className="md:hidden" />
@@ -11,7 +11,14 @@ export default function Header() {
       <button aria-label="Notifications" className="relative rounded-full bg-white/10 p-2 hover:bg-white/20">
         <Bell size={18} />
       </button>
-      <div className="grid size-9 place-items-center rounded-full bg-white/20 text-sm font-semibold">A</div>
+      {userEmail ? (
+        <div className="flex items-center gap-2">
+          <span className="hidden max-w-[180px] truncate text-xs text-white/80 sm:block" title={userEmail}>{userEmail}</span>
+          <button onClick={onSignOut} aria-label="Đăng xuất" title="Đăng xuất" className="rounded-full bg-white/10 p-2 hover:bg-white/20"><LogOut size={16} /></button>
+        </div>
+      ) : (
+        <div className="grid size-9 place-items-center rounded-full bg-white/20 text-sm font-semibold">A</div>
+      )}
     </header>
   );
 }

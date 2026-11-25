@@ -9,11 +9,20 @@ Hệ thống quản lý du lịch kiểu TMS ("The Smart Way to Run Your Travel 
 ## 2. Tech stack
 - **Frontend:** React 19, TypeScript, Vite, Tailwind CSS v4 (`@tailwindcss/vite`, cấu hình trong `src/index.css` bằng `@theme`), Lucide Icons, Motion (`motion/react`), Recharts, `docx` (xuất Word).
 - **Backend (chưa build):** Node.js, Express (`server.ts` / Serverless API), Google Drive API v3, WooCommerce REST API.
-- **Database & Auth (chưa nối):** Supabase (PostgreSQL, Auth, RLS, Realtime, Storage) **hoặc** 1 file backup duy nhất trên Google Drive.
-- **Hiện tại:** chưa có DB → dùng **session data** (`sessionStorage`): leads `tms.leads.v1`, tour packages `tms.packages.v1`, thư viện itinerary `tms.itineraries.v1`, thư viện khách sạn `tms.hotels.v1`. Đóng tab là mất dữ liệu; dữ liệu mẫu được seed lại.
+- **Database & Auth:** Supabase (PostgreSQL, Auth, RLS, Realtime) — ĐÃ NỐI, bật khi có biến môi trường; storage ảnh/file chưa làm. Phương án dự phòng: 1 file backup trên Google Drive (chưa làm).
+- **2 chế độ chạy:** (a) KHÔNG đặt `VITE_SUPABASE_*` → session data (`sessionStorage`, không đăng nhập, mất dữ liệu khi đóng tab); (b) đặt đủ `VITE_SUPABASE_URL` + `VITE_SUPABASE_PUBLISHABLE_KEY` → dùng Supabase, bắt buộc đăng nhập email/mật khẩu. Khoá sessionStorage: leads `tms.leads.v1`, tour packages `tms.packages.v1`, thư viện itinerary `tms.itineraries.v1`, thư viện khách sạn `tms.hotels.v1`. Đóng tab là mất dữ liệu; dữ liệu mẫu được seed lại.
+
+## 2b. Supabase – khoá & bảo mật (QUAN TRỌNG)
+- **Publishable key** (`sb_publishable_...`) → `VITE_SUPABASE_PUBLISHABLE_KEY`, nằm trong frontend, an toàn vì có đăng nhập + RLS.
+- **Secret key** (`sb_secret_...`) bỏ qua RLS → CHỈ ở `.env.local` dưới tên `SUPABASE_SECRET_KEY` (không tiền tố VITE_), chỉ dùng cho `npm run seed` và backend Express sau này. `src/lib/supabase.ts` tự chặn nếu phát hiện secret key trong biến VITE_.
+- Không dán secret key vào chat/code/git. Nếu lỡ lộ → rotate trong Supabase Dashboard.
+- Schema + RLS + Realtime: `supabase/schema.sql` (4 bảng leads, tour_packages, itineraries, hotels; mỗi bảng có cột `data jsonb`). Policy hiện tại: mọi user đã đăng nhập được đọc/ghi tất cả — cần siết lại nếu có phân quyền.
+- Cài đặt: (1) chạy `supabase/schema.sql` trong SQL Editor; (2) copy `.env.example` → `.env.local` và điền; (3) `npm install`; (4) `npm run seed` (nạp dữ liệu mẫu + tạo user nếu có SEED_ADMIN_*); (5) `npm run dev` và đăng nhập.
+- Kiến trúc dữ liệu: UI đọc đồng bộ từ cache (`lib/collection.ts`), ghi lạc quan rồi đẩy xuống `lib/persistence.ts` (session hoặc Supabase); lead qua `leadRepository.ts`. Realtime tự tải lại khi người khác sửa. Lỗi ghi hiện toast (`lib/notify.ts`).
 
 ## 3. Cấu trúc thư mục
 ```
+supabase/schema.sql, scripts/seed.ts, .env.example
 src/
   main.tsx, App.tsx            # Sidebar + Header + 3 trang (leads / itinerary / accommodation) + LeadEditModal
   index.css                    # Tailwind v4, theme, .field/.label, style trang "Word" (.doc-*), CSS in PDF
@@ -25,15 +34,19 @@ src/
     terms.ts                   # điều khoản mặc định (Inclusions, Exclusions, Rates, Payment, Cancellation)
     seedPackages.ts            # package mẫu DISCOVERY DA NANG cho lead ITE-TA-471
   lib/
-    leadRepository.ts          # LeadRepository + SessionLeadRepository       ← điểm thay DB (leads)
-    packageStore.ts            # store tour package + usePackages(leadId?)     ← điểm thay DB (packages)
-    collection.ts              # createCollection<T>(): store list generic + hook useAll()
-    libraryStore.ts            # itineraryStore, hotelStore (CRUD)             ← điểm thay DB (thư viện)
+    supabase.ts                # client Supabase (publishable key) + chặn secret key
+    auth.ts, stores.ts, notify.ts  # đăng nhập, init/reset stores, toast lỗi
+    persistence.ts             # Persistence<T>: session hoặc Supabase (jsonb + realtime)
+    collection.ts              # createCollection<T>(): cache + ghi lạc quan + hook useAll()
+    leadRepository.ts          # SessionLeadRepository / SupabaseLeadRepository (bảng leads)
+    packageStore.ts            # store tour package + usePackages(leadId?)
+    libraryStore.ts            # itineraryStore, hotelStore (CRUD)
+    exportMarkdown.ts, download.ts  # xuất .md, tải file
     packageLogic.ts            # syncNights/syncOptions, autoRooms, computePrices, groupStays, normalizePackage…
     exportDocx.ts              # xuất .docx thật theo template (thư viện docx, import động)
     image.ts, useLeads.ts, format.ts
   components/
-    Sidebar, Header
+    Sidebar, Header (hiện email + nút đăng xuất khi dùng Supabase), LoginPage, Toasts
     LeadsPage, LeadEditModal   # danh sách lead / popup lead
     TourPackagesTab            # danh sách package của 1 lead
     TourPackageEditor          # màn hình toàn trang (portal): trang Word + thanh dưới + drawer + export
@@ -55,10 +68,11 @@ src/
 **Thư viện** (CRUD ở sidebar): Itinerary (ItineraryDay) và Hotel (`HotelTemplate`: name, stars, address, destination, rooms[{name, price}]; phòng chứa chữ "extra" tính theo giường lẻ). Package luôn giữ BẢN SAO của dữ liệu thư viện nên sửa/xoá thư viện không làm đổi package cũ.
 
 ## 5. Quy ước
-- UI không gọi storage trực tiếp; chỉ qua `leadRepo` và `packageStore`. Chuyển Supabase = thay phần ruột 2 file này.
+- UI không gọi storage/Supabase trực tiếp; chỉ qua `leadRepo`, `packageStore`, `itineraryStore`, `hotelStore`.
 - Ngày hiển thị `dd/mm/yyyy` (tài liệu dùng dạng "Fri, 20 Feb 2026"); lưu ISO. Tiền: USD.
 - Điền phòng nhanh: khách ÷ 2 phòng + 1 extra bed nếu lẻ (5 khách = 2 phòng + 1 extra bed).
 - Tài liệu bám file `Tour_Itinerary_Template.docx`: Tour Information → Brief Itinerary → Prices (theo option) → Accommodations → Detailed Itinerary → Inclusions/Exclusions/Rates/Payment/Cancellation.
+- Export: Word (.docx), PDF (`window.print()`), Markdown (.md) — cả 3 theo cùng cấu trúc template.
 - PDF = `window.print()` + CSS `@media print` (chọn "Save as PDF"); Word = `.docx` dựng bằng thư viện `docx` (không phải chụp lại HTML nên 2 bản có thể lệch nhau nhẹ về layout).
 - Chạy: `npm install` → `npm run dev`.
 
@@ -74,7 +88,8 @@ src/
 - [ ] Chia sẻ link package cho khách, Revise / lịch sử phiên bản
 - [ ] Tab Invoices / Vouchers / Follow Logs
 - [ ] Khối "Working" + Filter nâng cao ở danh sách lead
-- [ ] Supabase (leads, tour_packages JSONB, itineraries, hotels, Auth, RLS), upload ảnh thật vào Storage
+- [x] Supabase: bảng + RLS + Realtime + đăng nhập + seed bằng secret key; export Markdown
+- [ ] Phân quyền theo vai trò/sale (siết RLS), upload ảnh bìa/attachments vào Supabase Storage, chuẩn hoá cột thay jsonb
 - [ ] Backend Express + Google Drive backup + WooCommerce
 
 ## 7. Quyết định / ghi chú
@@ -87,5 +102,5 @@ src/
 
 ## 8. Bước tiếp theo đề xuất
 1. Chạy thử, chỉnh layout trang Word/PDF cho khớp mẫu.
-2. Supabase: schema + repository thật cho leads, tour_packages, itineraries, hotels.
+2. Siết RLS theo vai trò; ảnh bìa & attachments lên Supabase Storage.
 3. Giá trẻ em và chia sẻ link báo giá.
