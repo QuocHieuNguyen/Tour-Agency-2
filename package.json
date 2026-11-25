@@ -10,6 +10,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "docx": "^9.0.0",
     "lucide-react": "^0.460.0",
     "motion": "^12.0.0",
     "react": "^19.0.0",

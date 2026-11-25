@@ -20,11 +20,11 @@ export function useLeads() {
     return saved;
   }, []);
 
-const create = useCallback(async (lead: Lead) => {
-  const created = await leadRepo.create(lead);
-  setLeads((prev) => [created, ...prev]);
-  return created;
-}, []);
+  const create = useCallback(async (lead: Lead) => {
+    const created = await leadRepo.create(lead);
+    setLeads((prev) => [created, ...prev]);
+    return created;
+  }, []);
 
-return { leads, loading, refresh, save, create };
+  return { leads, loading, refresh, save, create };
 }

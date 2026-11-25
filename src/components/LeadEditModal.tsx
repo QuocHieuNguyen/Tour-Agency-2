@@ -8,6 +8,8 @@ import {
   CAMPAIGNS, CSKH_REAL_DEMAND, LEAD_VERIFY_STATUS, SALE_REAL_DEMAND, SOURCES, STAFF,
 } from "../data/options";
 import { fmtDateTime } from "../lib/format";
+import { usePackages } from "../lib/packageStore";
+import TourPackagesTab from "./TourPackagesTab";
 
 interface Props {
   lead: Lead;
@@ -23,10 +25,11 @@ export default function LeadEditModal({ lead, onSave, onClose }: Props) {
   const [tab, setTab] = useState<Tab>("info");
   const [saving, setSaving] = useState(false);
   const [newReminder, setNewReminder] = useState("");
+  const fileRef = useRef<HTMLInputElement>(null);
   const [showErrors, setShowErrors] = useState(false);
   const isNew = !draft.id;
   const sourceError = showErrors && !draft.source.trim();
-  const fileRef = useRef<HTMLInputElement>(null);
+  const pkgCount = usePackages(draft.id).length;
 
   const dirty = JSON.stringify(draft) !== JSON.stringify(saved);
   const set = <K extends keyof Lead>(key: K, value: Lead[K]) => setDraft((d) => ({ ...d, [key]: value }));
@@ -67,7 +70,7 @@ export default function LeadEditModal({ lead, onSave, onClose }: Props) {
 
   const tabs: { id: Tab; label: string; icon: ReactNode; badge?: number }[] = [
     { id: "info", label: "Information", icon: <Info size={14} /> },
-    { id: "packages", label: "Tour Packages", icon: <Package size={14} />, badge: draft.tourPackages },
+    { id: "packages", label: "Tour Packages", icon: <Package size={14} />, badge: pkgCount },
     { id: "invoices", label: "Invoices", icon: <Receipt size={14} /> },
     { id: "vouchers", label: "Vouchers", icon: <Ticket size={14} /> },
     { id: "logs", label: "Follow Logs", icon: <ScrollText size={14} /> },
@@ -85,12 +88,10 @@ export default function LeadEditModal({ lead, onSave, onClose }: Props) {
         initial={{ y: 24, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ duration: 0.18 }}
       >
         {/* header */}
-        <div className="text-[12px] font-bold">{isNew ? "NEW LEAD" : "EDIT LEAD"}</div>
-        <div className="py-1 text-base font-bold">{draft.code || "Mã tự sinh khi lưu"}</div>
         <div className="flex items-start gap-4 border-b border-line px-5 pt-4">
           <div>
-            <div className="text-[12px] font-bold">EDIT LEAD</div>
-            <div className="py-1 text-base font-bold">{draft.code}</div>
+            <div className="text-[12px] font-bold">{isNew ? "NEW LEAD" : "EDIT LEAD"}</div>
+            <div className="py-1 text-base font-bold">{draft.code || "Mã tự sinh khi lưu"}</div>
           </div>
           <button onClick={requestClose} aria-label="Close" className="ml-auto rounded p-1.5 hover:bg-panel"><X size={20} /></button>
         </div>
@@ -108,7 +109,9 @@ export default function LeadEditModal({ lead, onSave, onClose }: Props) {
 
         {/* body */}
         <div className="flex-1 overflow-y-auto">
-          {tab !== "info" ? (
+          {tab === "packages" ? (
+            <TourPackagesTab lead={draft} />
+          ) : tab !== "info" ? (
             <div className="grid h-72 place-items-center text-gray-500">Tab này sẽ được build ở bước sau.</div>
           ) : (
             <div className="grid gap-6 p-5 lg:grid-cols-[minmax(0,1fr)_480px]">
@@ -133,10 +136,10 @@ export default function LeadEditModal({ lead, onSave, onClose }: Props) {
 
                 <Section title="Source">
                   <div className="grid gap-4 md:grid-cols-3">
-                    <Field label="Lead Code"><input className="field" disabled value={draft.code || "Tự sinh khi lưu"}/></Field>
-                      <Field label={<>Source <span className="text-red-500">*</span></>} error={sourceError ? "Vui lòng chọn Source" : undefined}>
-                        <Select value={draft.source} onChange={(v) => set("source", v)} options={SOURCES} placeholder="--- Select Source ---" invalid={sourceError} />
-                      </Field>
+                    <Field label="Lead Code"><input className="field" disabled value={draft.code || "Tự sinh khi lưu"} /></Field>
+                    <Field label={<>Source <span className="text-red-500">*</span></>} error={sourceError ? "Vui lòng chọn Source" : undefined}>
+                      <Select value={draft.source} onChange={(v) => set("source", v)} options={SOURCES} placeholder="--- Select Source ---" invalid={sourceError} />
+                    </Field>
                     <Field label="Campaign">
                       <Select value={draft.campaign} onChange={(v) => set("campaign", v)} options={CAMPAIGNS} placeholder="--- Select Campain ---" />
                     </Field>
@@ -230,14 +233,15 @@ export default function LeadEditModal({ lead, onSave, onClose }: Props) {
                     <Toggle label="Fully customized prices" checked={draft.fullyCustomizedPrices} onChange={(v) => set("fullyCustomizedPrices", v)} />
                   </div>
                 </Section>
+
                 {!isNew && (
-                <Section title="Activity">
-                  <dl className="space-y-1 text-gray-500">
-                    <div>Created by <b className="text-ink">{draft.createdBy}</b></div>
-                    <div>Created: {fmtDateTime(draft.createdAt)}</div>
-                    <div>Updated: {fmtDateTime(draft.updatedAt)}</div>
-                  </dl>
-                </Section>
+                  <Section title="Activity">
+                    <dl className="space-y-1 text-gray-500">
+                      <div>Created by <b className="text-ink">{draft.createdBy}</b></div>
+                      <div>Created: {fmtDateTime(draft.createdAt)}</div>
+                      <div>Updated: {fmtDateTime(draft.updatedAt)}</div>
+                    </dl>
+                  </Section>
                 )}
               </div>
             </div>

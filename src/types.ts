@@ -49,3 +49,56 @@ export interface Lead {
 }
 
 export type LeadInput = Omit<Lead, "id" | "code" | "createdAt" | "updatedAt">;
+
+/* ---------- Tour package ---------- */
+export type DayTourType = "Private Transfer" | "Private Tour (PVT)" | "Group Tour (SIC)";
+export type PackageTourType = "GROUP TOUR (SIC)" | "PRIVATE TOUR (PVT)";
+export type PackageStatus = "Unverified" | "Verified" | "Revised";
+
+/** 1 ngày trong lịch trình (phần 1: Itineraries) */
+export interface ItineraryDay {
+  id: string;
+  title: string;
+  tourType: DayTourType;
+  overnight: string; // "" = ngày cuối / departure
+  meals: string; // "L", "D", "B L D"...
+  inclusions: string[];
+  adultPrice: number; // USD / người lớn
+}
+
+export interface RoomLine { id: string; name: string; price: number; qty: number; note: string }
+
+/** 1 đêm nghỉ (phần 2: Accommodations) */
+export interface NightStay {
+  id: string;
+  hotelId: string;
+  hotelName: string;
+  stars: number;
+  address: string;
+  destination: string;
+  rooms: RoomLine[];
+}
+
+export interface TourPackage {
+  id: string;
+  leadId: string;
+  code: string; // ITE-TA-471/2
+  title: string;
+  subtitle: string; // "Hanoi - Da Nang"
+  coverImage: string; // data URL (JPEG) hoặc ""
+  tourType: PackageTourType;
+  status: PackageStatus;
+  validDate: string; // YYYY-MM-DD
+  note: string;
+  guestName: string;
+  nationality: string;
+  contact: string;
+  numGuests: number;
+  travelDate: string; // ngày bắt đầu
+  days: ItineraryDay[];
+  nights: NightStay[]; // luôn = days.length - 1 (xem syncNights)
+  markupPct: number; // phần 3: Get Price
+  createdBy: string;
+  createdAt: string;
+  updatedAt: string;
+}

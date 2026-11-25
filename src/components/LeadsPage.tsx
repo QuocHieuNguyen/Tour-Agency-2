@@ -1,7 +1,8 @@
 import { useMemo, useState } from "react";
-import { BarChart3, ChevronDown, ChevronUp, Filter, RefreshCw, Search, Phone, AlertTriangle, Package,Plus } from "lucide-react";
+import { BarChart3, Plus, ChevronDown, ChevronUp, Filter, RefreshCw, Search, Phone, AlertTriangle, Package } from "lucide-react";
 import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { FOLLOW_LEVELS, type FollowLevel, type Lead } from "../types";
+import { usePackages } from "../lib/packageStore";
 import { daysFromToday, elapsed, fmtDate, fmtDateTime } from "../lib/format";
 
 const RANGES = [
@@ -25,7 +26,8 @@ interface Props {
   onNew: () => void;
 }
 
-export default function LeadsPage({ leads, loading, onRefresh, onOpen, onNew}: Props) {
+export default function LeadsPage({ leads, loading, onRefresh, onOpen, onNew }: Props) {
+  const allPackages = usePackages();
   const [range, setRange] = useState<(typeof RANGES)[number]["id"]>("all");
   const [level, setLevel] = useState<FollowLevel | "all">("all");
   const [query, setQuery] = useState("");
@@ -107,11 +109,11 @@ export default function LeadsPage({ leads, loading, onRefresh, onOpen, onNew}: P
             <button onClick={onRefresh} aria-label="Refresh" className="rounded border border-line p-2 hover:bg-panel">
               <RefreshCw size={15} className={loading ? "animate-spin" : ""} />
             </button>
-            <button className="flex items-center gap-1.5 rounded border border-line px-3 py-2 text-[12px] font-semibold hover:bg-panel">
-              <Filter size={14} /> FILTER
-            </button>
             <button onClick={onNew} className="flex items-center gap-1.5 rounded bg-brand px-3 py-2 text-[12px] font-bold text-white hover:bg-brand-dark">
               <Plus size={14} /> NEW LEAD
+            </button>
+            <button className="flex items-center gap-1.5 rounded border border-line px-3 py-2 text-[12px] font-semibold hover:bg-panel">
+              <Filter size={14} /> FILTER
             </button>
           </div>
 
@@ -164,7 +166,7 @@ export default function LeadsPage({ leads, loading, onRefresh, onOpen, onNew}: P
                       </td>
                       <td className="px-2 py-3">
                         <span className="inline-flex items-center gap-1 rounded bg-emerald-50 px-2 py-1 text-[12px] font-semibold text-emerald-700">
-                          <Package size={12} /> {l.tourPackages} Tour Packages
+                          <Package size={12} /> {allPackages.filter((p) => p.leadId === l.id).length} Tour Packages
                         </span>
                       </td>
                       <td className="px-2 py-3">
